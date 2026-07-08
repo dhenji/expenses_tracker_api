@@ -4,11 +4,11 @@ services:
     container_name: pg-expenses-tracker
     restart: unless-stopped
     ports:
-      - "${PG_PORT}:5432"
+      - "${DB_PG_PORT}:5432"
     environment:
-      POSTGRES_USER: ${PG_USER}
+      POSTGRES_USER: ${DB_PG_USER}
       POSTGRES_PASSWORD_FILE: /run/secrets/pg_user_password
-      POSTGRES_DB: ${PG_DB}
+      POSTGRES_DB: ${DB_PG_DB_NAME}
     env_file:
       - ./.env
     secrets:
@@ -19,8 +19,8 @@ services:
   flyway:
     image: flyway/flyway
     environment:
-      FLYWAY_URL: jdbc:postgresql://postgres:${PG_PORT}/${PG_DB} 
-      FLYWAY_USER: ${PG_USER}
+      FLYWAY_URL: jdbc:postgresql://${DB_PG_HOST}:${DB_PG_PORT}/${DB_PG_DB_NAME} 
+      FLYWAY_USER: ${DB_PG_USER}
       FLYWAY_LOCATIONS: filesystem:/flyway/migrations
     entrypoint: ["/flyway-entrypoint.sh"]
     command: ["migrate"]
