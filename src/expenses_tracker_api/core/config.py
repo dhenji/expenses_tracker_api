@@ -1,5 +1,8 @@
+import re
 from functools import cached_property, lru_cache
 from pathlib import Path
+from typing import Any
+from urllib.parse import quote_plus
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -9,7 +12,7 @@ class _Secrets:
     This class is for reading secrets needed by this project.
     """
 
-    def __init__(self, secret_path: Path):
+    def __init__(self, secret_path: Path) -> None:
         self._secret_path = secret_path
 
     def read(self, secret_name: str) -> str | None:
@@ -38,6 +41,7 @@ class Settings(BaseSettings):
     db_pg_user: str
     db_pg_db_name: str
 
+    # Docker secrets default path
     secrets_path: Path = Path("/run/secrets")
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
@@ -49,6 +53,29 @@ class Settings(BaseSettings):
     @property
     def db_pg_user_password(self) -> str | None:
         return self._secrets.read("pg_user_password")
+
+    @property
+    def db_pg_url(self) -> str:
+        required: dict[str, str | int | None] = {
+            "user": self.db_pg_user,
+            "password": self.db_pg_user_password,
+            "host": self.db_pg_host,
+            "port": self.db_pg_port,
+            "database_name": self.db_pg_db_name,
+        }
+
+        missing: list[str] = [key for key, value in required.items() if not value]
+
+        if missing:
+            raise ValueError(f"Missing PostgreSQL configuration: {', '.join(missing)}")
+
+        return (
+            "postgresql+psycopg://"
+            f"{quote_plus(str(required['user']))}:"
+            f"{quote_plus(str(required['password']))}@"
+            f"{required['host']}:{required['port']}/"
+            f"{required['database_name']}"
+        )
 
 
 @lru_cache
