@@ -1,9 +1,5 @@
-from .core.config import Settings, get_settings
-
-
-def main():
-    setting: Settings = get_settings()
-    print(setting.db_pg_port)
+def main() -> None:
+    pass
 
 
 if __name__ == "__main__":
