@@ -1,16 +1,17 @@
 from unittest.mock import Mock
 
-import pytest
-
-from expenses_tracker_api.core.config import Settings, get_settings
+from expenses_tracker_api.core.config import Settings
 
 
 def test_db_pg_url_encodes_credential() -> None:
-    settings: Settings = get_settings()
-    settings.db_pg_host = "localhost"
-    settings.db_pg_port = 5432
-    settings.db_pg_user = "test_user"
-    settings.db_pg_db_name = "test_db"
+    settings = Settings(
+        app_name="expenses-tracker-api",
+        environment="test",
+        db_pg_host="localhost",
+        db_pg_port=5432,
+        db_pg_user="test_user",
+        db_pg_db_name="test_db",
+    )
 
     settings.__dict__["_secrets"] = Mock()
     settings.__dict__["_secrets"].read.return_value = "test_password"

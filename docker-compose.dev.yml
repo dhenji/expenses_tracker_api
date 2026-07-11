@@ -1,4 +1,22 @@
 services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+      target: runtime
+    env_file:
+      - ./.env
+    secrets:
+      - pg_user_password
+    depends_on:
+      - postgres
+  
+  app-test:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+      target: test
+
   postgres:
     image: postgres:16
     container_name: pg-expenses-tracker

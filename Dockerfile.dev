@@ -1,0 +1,28 @@
+FROM python:3.13-slim AS builder
+
+WORKDIR /app
+
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+
+COPY pyproject.toml uv.lock README.md ./
+
+RUN uv sync --frozen --no-install-project
+
+COPY src ./src
+
+RUN uv sync --frozen
+
+FROM builder as test
+
+CMD [ "uv", "run", "pytest" ]
+
+FROM python:3.13-slim AS runtime
+
+WORKDIR /app
+
+COPY --from=builder /app/.venv /app/.venv
+COPY --from=builder /app/src /app/src
+
+ENV PATH="/app/.venv/bin:$PATH"
+
+CMD ["app"]
