@@ -25,4 +25,6 @@ COPY --from=builder /app/src /app/src
 
 ENV PATH="/app/.venv/bin:$PATH"
 
-CMD ["app"]
+EXPOSE 8000
+
+CMD ["uvicorn", "expenses_tracker_api.main:app", "--host", "0.0.0.0", "--port", "8000"]

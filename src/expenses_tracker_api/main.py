@@ -1,6 +1,7 @@
-def main() -> None:
-    pass
+from fastapi import FastAPI
 
+from expenses_tracker_api.api.router import api_router
 
-if __name__ == "__main__":
-    main()
+app = FastAPI(title="Expenses Tracker API", version="0.1.0")
+
+app.include_router(api_router)
