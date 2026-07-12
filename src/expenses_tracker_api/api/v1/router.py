@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from .users import router as user_router
+from expenses_tracker_api.api.v1.users import router as user_router
 
 router = APIRouter()
 

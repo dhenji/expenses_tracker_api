@@ -21,7 +21,7 @@ FROM python:3.13-slim AS runtime
 WORKDIR /app
 
 COPY --from=builder /app/.venv /app/.venv
-COPY --from=builder /app/src /app/src
+COPY --from=builder /app/src/expenses_tracker_api /app/src/expenses_tracker_api
 
 ENV PATH="/app/.venv/bin:$PATH"
 

@@ -2,10 +2,10 @@ CREATE TABLE public.users (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid (),
   first_name VARCHAR(50) NOT NULL,
   last_name VARCHAR(50) NOT NULL,
-  email VARCHAR(254) NOT NULL,
+  email VARCHAR(254) UNIQUE NOT NULL,
   password_hash VARCHAR(255) NOT NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW (),
-  update_at TIMESTAMPTZ NOT NULL DEFAULT NOW ()
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW ()
 );
 
 CREATE TABLE public.categories (
