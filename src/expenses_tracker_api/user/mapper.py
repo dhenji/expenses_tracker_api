@@ -11,7 +11,9 @@ def map_user_integrity_error(integrity_error: IntegrityError) -> Exception:
         None,
     )
 
-    if constraint_name == "uq_users_email":
+    print("Constraint:", constraint_name)
+
+    if constraint_name == "users_email_key":
         return EmailAlreadyExistsError("Email already exists.")
 
     return PersistenceError("Unable to persist user.", original=integrity_error)
