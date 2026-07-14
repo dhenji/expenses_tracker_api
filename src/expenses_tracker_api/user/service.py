@@ -1,3 +1,5 @@
+from typing import Sequence
+
 from expenses_tracker_api.core.security import hash_password
 from expenses_tracker_api.user.model import User
 from expenses_tracker_api.user.repository import UserRepository
@@ -21,3 +23,8 @@ class UserService:
         saved_user: User = self.repository.save(user)
 
         return UserResponse.model_validate(saved_user)
+
+    def get_all_users(self) -> list[UserResponse]:
+        users: Sequence[User] = self.repository.get_all()
+
+        return [UserResponse.model_validate(user) for user in users]

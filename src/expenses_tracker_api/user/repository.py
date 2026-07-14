@@ -1,3 +1,6 @@
+from typing import Sequence
+
+from sqlalchemy import Select, select
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.orm import Session
 
@@ -23,3 +26,10 @@ class UserRepository:
         except SQLAlchemyError as e:
             self.db.rollback()
             raise PersistenceError("Database error while saving user.") from e
+
+    def get_all(self) -> Sequence[User]:
+        try:
+            stmt: Select[tuple[User]] = select(User)
+            return self.db.scalars(stmt).all()
+        except SQLAlchemyError as e:
+            raise PersistenceError("Database error while fetching users.") from e

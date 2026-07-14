@@ -11,6 +11,7 @@ router = APIRouter()
     "/",
     response_model=UserResponse,
     status_code=status.HTTP_201_CREATED,
+    summary="Create a user",
 )
 def create_user(
     user_data: UserCreate,
@@ -19,11 +20,23 @@ def create_user(
     return service.create_user(user_data)
 
 
-@router.get("/", summary="List users")
-async def list_users():
-    return []
+@router.get(
+    "/",
+    response_model=list[UserResponse],
+    summary="List users",
+    status_code=status.HTTP_200_OK,
+)
+async def list_users(
+    service: UserService = Depends(get_user_service),
+) -> list[UserResponse]:
+    return service.get_all_users()
 
 
-@router.get("/{user_id}", summary="Get a user")
-async def get_user(user_id: int):
+@router.get(
+    "/{user_email}",
+    response_model=UserResponse,
+    summary="Get a user using email",
+    status_code=status.HTTP_200_OK,
+)
+async def get_user_by_email() -> UserResponse:
     return {"id": user_id}
