@@ -7,7 +7,7 @@ def test_db_pg_url_encodes_credential() -> None:
     settings = Settings(
         app_name="expenses-tracker-api",
         environment="test",
-        db_pg_host="localhost",
+        db_pg_host="postgres",
         db_pg_port=5432,
         db_pg_user="test_user",
         db_pg_db_name="test_db",
@@ -17,5 +17,5 @@ def test_db_pg_url_encodes_credential() -> None:
     settings.__dict__["_secrets"].read.return_value = "test_password"
 
     assert settings.db_pg_url == (
-        "postgresql+psycopg://test_user:test_password@localhost:5432/test_db"
+        "postgresql+psycopg://test_user:test_password@postgres:5432/test_db"
     )

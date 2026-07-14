@@ -8,6 +8,8 @@ services:
       - "${APP_PORT}:8000"
     volumes:
       - ./src:/app/src
+    environment:
+      DB_PG_HOST: postgres
     env_file:
       - ./.env
     secrets:
@@ -16,22 +18,34 @@ services:
       uvicorn
       expenses_tracker_api.main:app
       --host 0.0.0.0
-      --port 8000
+      --port "${APP_PORT}"
       --reload
       --reload-dir /app/src/expenses_tracker_api
+    depends_on:
+      - postgres
+    networks:
+      - expenses-net
   
   test:
     build:
       context: .
       dockerfile: Dockerfile.dev
       target: test
+    environment:
+      DB_PG_HOST: postgres
+    env_file:
+      - ./.env
+    secrets:
+      - pg_user_password
+    depends_on:
+      - postgres
+    networks:
+      - expenses-net
 
   postgres:
     image: postgres:16
     container_name: pg-expenses-tracker
     restart: unless-stopped
-    ports:
-      - "${DB_PG_PORT}:5432"
     environment:
       POSTGRES_USER: ${DB_PG_USER}
       POSTGRES_PASSWORD_FILE: /run/secrets/pg_user_password
@@ -42,10 +56,13 @@ services:
       - pg_user_password
     volumes:
       - pg_exp_data:/var/lib/postgresql/data
+    networks:
+      - expenses-net
 
   flyway:
     image: flyway/flyway
     environment:
+      DB_PG_HOST: postgres
       FLYWAY_URL: jdbc:postgresql://${DB_PG_HOST}:${DB_PG_PORT}/${DB_PG_DB_NAME} 
       FLYWAY_USER: ${DB_PG_USER}
       FLYWAY_LOCATIONS: filesystem:/flyway/migrations
@@ -58,6 +75,12 @@ services:
       - ./db/migrations:/flyway/migrations:ro
     depends_on:
       - postgres
+    networks:
+      - expenses-net
+
+networks:
+  expenses-net:
+    name: expenses-net
 
 secrets:
   pg_user_password:

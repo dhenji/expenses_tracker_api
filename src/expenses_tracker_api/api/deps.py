@@ -4,15 +4,32 @@ from fastapi import Depends
 from sqlalchemy.orm import Session
 
 from expenses_tracker_api.core.database import database
+from expenses_tracker_api.core.unit_of_work import UnitOfWork
 from expenses_tracker_api.user.repository import UserRepository
-from expenses_tracker_api.user.service import UserService
+from expenses_tracker_api.user.service import UserCommandService, UserQueryService
 
 
-def get_db() -> Generator[Session, None, None]:
-    yield from database.get_db()
+def get_session() -> Generator[Session, None, None]:
+    session = database.create_session()
+    try:
+        yield session
+    finally:
+        session.close()
 
 
-def get_user_service(db: Session = Depends(get_db)) -> UserService:
-    repository = UserRepository(db)
+def get_uow() -> UnitOfWork:
+    return UnitOfWork(database.create_session())
 
-    return UserService(repository)
+
+def get_user_command_service() -> UserCommandService:
+    return UserCommandService(
+        uow_factory=get_uow,
+    )
+
+
+def get_user_query_service(
+    session: Session = Depends(get_session),
+) -> UserQueryService:
+    query_repository = UserRepository(session)
+
+    return UserQueryService(query_repository)
