@@ -1,19 +1,32 @@
+from collections.abc import Awaitable, Callable
+
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
-from expenses_tracker_api.shared.exceptions import PersistenceError
-from expenses_tracker_api.user.exceptions import EmailAlreadyExistsError
+from expenses_tracker_api.shared.exceptions import ApplicationError, DatabaseError
+from expenses_tracker_api.user.exceptions import (
+    EmailAlreadyExistsError,
+    UserNotFoundError,
+)
+
+ExceptionHandler = Callable[..., Awaitable[JSONResponse]]
 
 
-async def _email_exists_handler(
-    request: Request, exc: EmailAlreadyExistsError
-) -> JSONResponse:
-    return JSONResponse(status_code=409, content={"detail": str(exc)})
-
-
-async def _persistence_error_handler(
+async def _application_error_handler(
     request: Request,
-    exc: PersistenceError,
+    exc: ApplicationError,
+) -> JSONResponse:
+    return JSONResponse(
+        status_code=500,
+        content={
+            "detail": "Application error.",
+        },
+    )
+
+
+async def _database_error_handler(
+    request: Request,
+    exc: DatabaseError,
 ) -> JSONResponse:
     return JSONResponse(
         status_code=500,
@@ -23,7 +36,25 @@ async def _persistence_error_handler(
     )
 
 
-def register_exception_handlers(app: FastAPI) -> None:
-    app.add_exception_handler(EmailAlreadyExistsError, _email_exists_handler)
+async def _email_already_exists_error_handler(
+    request: Request, exc: EmailAlreadyExistsError
+) -> JSONResponse:
+    return JSONResponse(status_code=409, content={"detail": str(exc)})
 
-    app.add_exception_handler(PersistenceError, _persistence_error_handler)
+
+async def _user_not_found_error_handler(
+    request: Request, exc: UserNotFoundError
+) -> JSONResponse:
+    return JSONResponse(status_code=404, content={"detail": str(exc)})
+
+
+def register_exception_handlers(app: FastAPI) -> None:
+    handlers: dict[type[ApplicationError], ExceptionHandler] = {
+        EmailAlreadyExistsError: _email_already_exists_error_handler,
+        UserNotFoundError: _user_not_found_error_handler,
+        DatabaseError: _database_error_handler,
+        ApplicationError: _application_error_handler,
+    }
+
+    for exception, handler in handlers.items():
+        app.add_exception_handler(exception, handler)

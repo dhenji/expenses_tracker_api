@@ -22,12 +22,8 @@ class DatabaseSessionManager:
     def engine(self) -> Engine:
         return self._engine
 
-    def get_db(self) -> Generator[Session, None, None]:
-        db = self._session_factory()
-        try:
-            yield db
-        finally:
-            db.close()
+    def create_session(self) -> Session:
+        return self._session_factory()
 
 
 _settings: Settings = get_settings()

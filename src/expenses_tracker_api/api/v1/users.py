@@ -1,8 +1,16 @@
-from fastapi import APIRouter, Depends, status
+from typing import Sequence
 
-from expenses_tracker_api.api.deps import get_user_service
+from fastapi import APIRouter, Depends, status
+from pydantic import EmailStr
+
+from expenses_tracker_api.api.deps import (
+    get_user_command_service,
+    get_user_query_service,
+)
+from expenses_tracker_api.user.dto import CreateUserInput
+from expenses_tracker_api.user.model import User
 from expenses_tracker_api.user.schema import UserCreate, UserResponse
-from expenses_tracker_api.user.service import UserService
+from expenses_tracker_api.user.service import UserCommandService, UserQueryService
 
 router = APIRouter()
 
@@ -15,9 +23,18 @@ router = APIRouter()
 )
 def create_user(
     user_data: UserCreate,
-    service: UserService = Depends(get_user_service),
+    service: UserCommandService = Depends(get_user_command_service),
 ) -> UserResponse:
-    return service.create_user(user_data)
+    user: User = service.create_user(
+        CreateUserInput(
+            first_name=user_data.first_name,
+            last_name=user_data.last_name,
+            email=user_data.email,
+            password=user_data.password,
+        )
+    )
+
+    return UserResponse.model_validate(user)
 
 
 @router.get(
@@ -26,17 +43,24 @@ def create_user(
     summary="List users",
     status_code=status.HTTP_200_OK,
 )
-async def list_users(
-    service: UserService = Depends(get_user_service),
+def list_users(
+    service: UserQueryService = Depends(get_user_query_service),
 ) -> list[UserResponse]:
-    return service.get_all_users()
+    users: Sequence[User] = service.get_all_users()
+
+    return [UserResponse.model_validate(user) for user in users]
 
 
 @router.get(
-    "/{user_email}",
+    "/by-email/{email}",
     response_model=UserResponse,
     summary="Get a user using email",
     status_code=status.HTTP_200_OK,
 )
-async def get_user_by_email() -> UserResponse:
-    return {"id": user_id}
+def get_user_by_email(
+    email: EmailStr,
+    service: UserQueryService = Depends(get_user_query_service),
+) -> UserResponse:
+    user: User = service.get_user_by_email(str(email))
+
+    return UserResponse.model_validate(user)

@@ -19,6 +19,8 @@ services:
       --port 8000
       --reload
       --reload-dir /app/src/expenses_tracker_api
+    depends_on:
+      - postgres
   
   test:
     build:
