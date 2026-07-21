@@ -1,4 +1,5 @@
 from typing import Sequence
+from uuid import UUID
 
 from fastapi import APIRouter, Depends, status
 from pydantic import EmailStr
@@ -7,9 +8,9 @@ from expenses_tracker_api.api.deps import (
     get_user_command_service,
     get_user_query_service,
 )
-from expenses_tracker_api.user.dto import CreateUserInput
+from expenses_tracker_api.user.dto import CreateUserInput, UpdateUserInput
 from expenses_tracker_api.user.model import User
-from expenses_tracker_api.user.schema import UserCreate, UserResponse
+from expenses_tracker_api.user.schema import UserCreate, UserResponse, UserUpdate
 from expenses_tracker_api.user.service import UserCommandService, UserQueryService
 
 router = APIRouter()
@@ -62,5 +63,29 @@ def get_user_by_email(
     service: UserQueryService = Depends(get_user_query_service),
 ) -> UserResponse:
     user: User = service.get_user_by_email(str(email))
+
+    return UserResponse.model_validate(user)
+
+
+@router.patch(
+    "/{user_id}",
+    response_model=UserResponse,
+    summary="Update user information using id",
+    status_code=status.HTTP_200_OK,
+)
+def update_user(
+    user_id: UUID,
+    user_data: UserUpdate,
+    service: UserCommandService = Depends(get_user_command_service),
+) -> UserResponse:
+    user: User = service.update_user(
+        user_id,
+        UpdateUserInput(
+            first_name=user_data.first_name,
+            last_name=user_data.last_name,
+            email=user_data.email,
+            password=user_data.password,
+        ),
+    )
 
     return UserResponse.model_validate(user)

@@ -1,4 +1,5 @@
 from typing import Sequence
+from uuid import UUID
 
 from sqlalchemy import Select, select
 from sqlalchemy.exc import SQLAlchemyError
@@ -35,5 +36,11 @@ class UserRepository:
         try:
             stmt: Select[tuple[User]] = select(User).where(User.email == email)
             return self._session.execute(stmt).scalar_one_or_none()
+        except SQLAlchemyError as e:
+            raise map_query_error(e) from e
+
+    def get_by_id(self, id: UUID) -> User | None:
+        try:
+            return self._session.get(User, id)
         except SQLAlchemyError as e:
             raise map_query_error(e) from e
