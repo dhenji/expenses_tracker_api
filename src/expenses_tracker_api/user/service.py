@@ -40,7 +40,7 @@ class UserCommandService:
 
     def update_user(self, id: UUID, data: UpdateUserInput) -> User:
         with self._uow_factory() as uow:
-            user: User | None = uow.user_repo.get_by_id(id)
+            user: User | None = uow.user_repo.get(id)
 
             if user is None:
                 raise UserNotFoundError(f"User with an id of {id} doesn't exists.")
@@ -62,7 +62,7 @@ class UserCommandService:
             if data.password is not None:
                 user.password_hash = hash_password(data.password)
 
-            return uow.user_repo.save(user)
+            return user
 
 
 class UserQueryService:
@@ -71,6 +71,14 @@ class UserQueryService:
 
     def get_all_users(self) -> Sequence[User]:
         return self._query_repo.get_all()
+
+    def get_user(self, id: UUID) -> User:
+        user: User | None = self._query_repo.get(id)
+
+        if user is None:
+            raise UserNotFoundError(f"User with an id of {id} doesn't exists.")
+
+        return user
 
     def get_user_by_email(self, email: str) -> User:
         user = self._query_repo.get_by_email(email)

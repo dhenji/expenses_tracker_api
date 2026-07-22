@@ -53,6 +53,18 @@ def list_users(
 
 
 @router.get(
+    "/{user_id}",
+    response_model=UserResponse,
+    summary="Get user information using id",
+    status_code=status.HTTP_200_OK,
+)
+def get_user(
+    user_id: UUID, service: UserQueryService = Depends(get_user_query_service)
+) -> UserResponse:
+    return UserResponse.model_validate(service.get_user(user_id))
+
+
+@router.get(
     "/by-email/{email}",
     response_model=UserResponse,
     summary="Get a user using email",
