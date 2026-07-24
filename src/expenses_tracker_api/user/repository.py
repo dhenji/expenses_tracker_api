@@ -44,3 +44,9 @@ class UserRepository:
             return self._session.execute(stmt).scalar_one_or_none()
         except SQLAlchemyError as e:
             raise map_query_error(e) from e
+
+    def delete(self, user: User) -> None:
+        try:
+            self._session.delete(user)
+        except SQLAlchemyError as e:
+            raise map_write_error(e) from e

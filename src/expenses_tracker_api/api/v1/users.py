@@ -101,3 +101,14 @@ def update_user(
     )
 
     return UserResponse.model_validate(user)
+
+
+@router.delete(
+    "/{user_id}",
+    summary="delete user using id",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+def delete_user(
+    user_id: UUID, service: UserCommandService = Depends(get_user_command_service)
+) -> None:
+    service.delete_user(user_id)

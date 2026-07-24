@@ -64,6 +64,15 @@ class UserCommandService:
 
             return user
 
+    def delete_user(self, id: UUID) -> None:
+        with self._uow_factory() as uow:
+            user: User | None = uow.user_repo.get(id)
+
+            if user is None:
+                raise UserNotFoundError(f"User with an id of {id} doesn't exists.")
+
+            uow.user_repo.delete(user)
+
 
 class UserQueryService:
     def __init__(self, query_repo: UserRepository) -> None:
@@ -81,7 +90,7 @@ class UserQueryService:
         return user
 
     def get_user_by_email(self, email: str) -> User:
-        user = self._query_repo.get_by_email(email)
+        user: User | None = self._query_repo.get_by_email(email)
 
         if user is None:
             raise UserNotFoundError(f"User with an email of {email} doesn't exists.")
