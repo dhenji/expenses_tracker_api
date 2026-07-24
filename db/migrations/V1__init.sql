@@ -11,7 +11,8 @@ CREATE TABLE public.users (
 CREATE TABLE public.categories (
   id SERIAL PRIMARY KEY,
   user_id UUID REFERENCES public.users (id) ON UPDATE CASCADE ON DELETE CASCADE,
-  name VARCHAR(50) NOT NULL,
+  name VARCHAR(50) NOT NULL UNIQUE,
+  description VARCHAR(255),
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW ()
 );
 
@@ -21,7 +22,7 @@ CREATE TABLE public.expenses (
   category_id SERIAL REFERENCES public.categories (id) ON UPDATE CASCADE ON DELETE RESTRICT,
   amount DECIMAL NOT NULL DEFAULT 0,
   currency VARCHAR(3) NOT NULL,
-  description VARCHAR(100),
+  description VARCHAR(255),
   expense_date DATE NOT NULL DEFAULT CURRENT_DATE,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW (),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW ()

@@ -22,7 +22,8 @@ services:
       --reload
       --reload-dir /app/src/expenses_tracker_api
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     networks:
       - expenses-net
   
@@ -38,7 +39,8 @@ services:
     secrets:
       - pg_user_password
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     networks:
       - expenses-net
 
@@ -56,14 +58,19 @@ services:
       - pg_user_password
     volumes:
       - pg_exp_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_PG_USER} -d ${DB_PG_DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start-period: 10s
     networks:
       - expenses-net
 
   flyway:
     image: flyway/flyway
     environment:
-      DB_PG_HOST: postgres
-      FLYWAY_URL: jdbc:postgresql://${DB_PG_HOST}:${DB_PG_PORT}/${DB_PG_DB_NAME} 
+      FLYWAY_URL: jdbc:postgresql://postgres:${DB_PG_PORT}/${DB_PG_DB_NAME} 
       FLYWAY_USER: ${DB_PG_USER}
       FLYWAY_LOCATIONS: filesystem:/flyway/migrations
     entrypoint: ["/flyway-entrypoint.sh"]
@@ -74,7 +81,8 @@ services:
       - ./scripts/flyway-entrypoint.sh:/flyway-entrypoint.sh:ro
       - ./db/migrations:/flyway/migrations:ro
     depends_on:
-      - postgres
+      postgres: 
+        condition: service_healthy
     networks:
       - expenses-net
 
