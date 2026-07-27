@@ -23,9 +23,7 @@ class UserCommandService:
             existing: User | None = uow.user_repo.get_by_email(email)
 
             if existing:
-                raise EmailAlreadyExistsError(
-                    f"User with an email of {email} already exists."
-                )
+                raise EmailAlreadyExistsError(email)
 
             password_hash: str = hash_password(data.password)
 
@@ -43,17 +41,16 @@ class UserCommandService:
             user: User | None = uow.user_repo.get(id)
 
             if user is None:
-                raise UserNotFoundError(f"User with an id of {id} doesn't exists.")
+                raise UserNotFoundError(id=id)
 
-            if data.email is not None and data.email != user.email:
-                existing: User | None = uow.user_repo.get_by_email(data.email)
+            data_email: str | None = data.email
+            if data_email is not None and data_email != user.email:
+                existing: User | None = uow.user_repo.get_by_email(data_email)
 
                 if existing:
-                    raise EmailAlreadyExistsError(
-                        f"User with an email of {data.email} already exists."
-                    )
+                    raise EmailAlreadyExistsError(data_email)
 
-                user.email = data.email
+                user.email = data_email
 
             if data.first_name is not None:
                 user.first_name = data.first_name
@@ -69,7 +66,7 @@ class UserCommandService:
             user: User | None = uow.user_repo.get(id)
 
             if user is None:
-                raise UserNotFoundError(f"User with an id of {id} doesn't exists.")
+                raise UserNotFoundError(id=id)
 
             uow.user_repo.delete(user)
 
@@ -85,7 +82,7 @@ class UserQueryService:
         user: User | None = self._query_repo.get(id)
 
         if user is None:
-            raise UserNotFoundError(f"User with an id of {id} doesn't exists.")
+            raise UserNotFoundError(id=id)
 
         return user
 
@@ -93,6 +90,6 @@ class UserQueryService:
         user: User | None = self._query_repo.get_by_email(email)
 
         if user is None:
-            raise UserNotFoundError(f"User with an email of {email} doesn't exists.")
+            raise UserNotFoundError(email=email)
 
         return user

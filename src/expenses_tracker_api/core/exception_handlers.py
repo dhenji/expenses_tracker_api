@@ -3,6 +3,7 @@ from collections.abc import Awaitable, Callable
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
+from expenses_tracker_api.category.exceptions import CategoryNameAlreadyExistsError
 from expenses_tracker_api.shared.exceptions import ApplicationError, DatabaseError
 from expenses_tracker_api.user.exceptions import (
     EmailAlreadyExistsError,
@@ -48,12 +49,19 @@ async def _user_not_found_error_handler(
     return JSONResponse(status_code=404, content={"detail": str(exc)})
 
 
+async def _category_name_already_exists_error_handler(
+    request: Request, exc: CategoryNameAlreadyExistsError
+) -> JSONResponse:
+    return JSONResponse(status_code=409, content={"detail": str(exc)})
+
+
 def register_exception_handlers(app: FastAPI) -> None:
     handlers: dict[type[ApplicationError], ExceptionHandler] = {
         EmailAlreadyExistsError: _email_already_exists_error_handler,
         UserNotFoundError: _user_not_found_error_handler,
         DatabaseError: _database_error_handler,
         ApplicationError: _application_error_handler,
+        CategoryNameAlreadyExistsError: _category_name_already_exists_error_handler,
     }
 
     for exception, handler in handlers.items():

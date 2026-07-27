@@ -3,6 +3,8 @@ from collections.abc import Generator
 from fastapi import Depends
 from sqlalchemy.orm import Session
 
+from expenses_tracker_api.category.repository import CategoryRepository
+from expenses_tracker_api.category.service import CategoryCommandService
 from expenses_tracker_api.core.database import database
 from expenses_tracker_api.core.unit_of_work import UnitOfWork
 from expenses_tracker_api.user.repository import UserRepository
@@ -33,3 +35,7 @@ def get_user_query_service(
     query_repository = UserRepository(session)
 
     return UserQueryService(query_repository)
+
+
+def get_category_command_service() -> CategoryCommandService:
+    return CategoryCommandService(uow_factory=get_uow)
