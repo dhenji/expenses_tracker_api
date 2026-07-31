@@ -105,7 +105,7 @@ def update_user(
 
 @router.delete(
     "/{user_id}",
-    summary="delete user using id",
+    summary="Delete user using id",
     status_code=status.HTTP_204_NO_CONTENT,
 )
 def delete_user(

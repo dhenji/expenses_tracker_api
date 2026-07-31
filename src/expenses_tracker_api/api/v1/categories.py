@@ -1,10 +1,18 @@
+from typing import Sequence
+
 from fastapi import APIRouter, Depends, status
 
-from expenses_tracker_api.api.deps import get_category_command_service
+from expenses_tracker_api.api.deps import (
+    get_category_command_service,
+    get_category_query_service,
+)
 from expenses_tracker_api.category.dto import CreateCategoryInput
 from expenses_tracker_api.category.model import Category
 from expenses_tracker_api.category.schema import CategoryCreate, CategoryResponse
-from expenses_tracker_api.category.service import CategoryCommandService
+from expenses_tracker_api.category.service import (
+    CategoryCommandService,
+    CategoryQueryService,
+)
 
 router = APIRouter()
 
@@ -27,3 +35,58 @@ def create_category(
     )
 
     return CategoryResponse.model_validate(category)
+
+
+@router.get(
+    "/",
+    response_model=list[CategoryResponse],
+    status_code=status.HTTP_200_OK,
+    summary="List categories",
+)
+def list_categories(
+    service: CategoryQueryService = Depends(get_category_query_service),
+) -> list[CategoryResponse]:
+    categories: Sequence[Category] = service.get_all_categories()
+
+    return [CategoryResponse.model_validate(category) for category in categories]
+
+
+@router.get(
+    "/{category_id}",
+    response_model=CategoryResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Get a category using name",
+)
+def get_category(
+    category_id: int,
+    service: CategoryQueryService = Depends(get_category_query_service),
+) -> CategoryResponse:
+    category: Category = service.get_category(category_id)
+
+    return CategoryResponse.model_validate(category)
+
+
+@router.get(
+    "/by-name/{name}",
+    response_model=CategoryResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Get a category using name",
+)
+def get_category_by_name(
+    name: str, service: CategoryQueryService = Depends(get_category_query_service)
+) -> CategoryResponse:
+    category: Category = service.get_category_by_name(name)
+
+    return CategoryResponse.model_validate(category)
+
+
+@router.delete(
+    "/{category_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Delete category using id",
+)
+def delete_category(
+    category_id: int,
+    service: CategoryCommandService = Depends(get_category_command_service),
+) -> None:
+    service.delete_category(category_id)
