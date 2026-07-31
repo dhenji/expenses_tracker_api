@@ -52,6 +52,21 @@ def list_categories(
 
 
 @router.get(
+    "/{category_id}",
+    response_model=CategoryResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Get a category using name",
+)
+def get_category(
+    category_id: int,
+    service: CategoryQueryService = Depends(get_category_query_service),
+) -> CategoryResponse:
+    category: Category = service.get_category(category_id)
+
+    return CategoryResponse.model_validate(category)
+
+
+@router.get(
     "/by-name/{name}",
     response_model=CategoryResponse,
     status_code=status.HTTP_200_OK,
