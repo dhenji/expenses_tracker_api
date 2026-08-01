@@ -10,7 +10,7 @@ class CategoryBase(BaseModel):
 
 
 class CategoryCreate(CategoryBase):
-    pass
+    user_id: UUID
 
 
 class CategoryResponse(CategoryBase):

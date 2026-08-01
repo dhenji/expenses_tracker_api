@@ -18,19 +18,16 @@ class CategoryCommandService:
     def __init__(self, uow_factory: Callable[[], UnitOfWork]) -> None:
         self._uow_factory = uow_factory
 
-    def create_category(
-        self, data: CreateCategoryInput, *, user_id: UUID | None = None
-    ) -> Category:
+    def create_category(self, data: CreateCategoryInput, *, user_id: UUID) -> Category:
         with self._uow_factory() as uow:
-            if user_id:
-                user: User | None = uow.user_repo.get(user_id)
+            user: User | None = uow.user_repo.get(user_id)
 
-                if not user:
-                    raise UserNotFoundError(id=user_id)
+            if user is None:
+                raise UserNotFoundError(id=user_id)
 
             existing: Category | None = uow.category_repo.get_by_name(data.name)
 
-            if existing:
+            if existing is not None:
                 raise CategoryNameAlreadyExistsError(data.name)
 
             category = Category(
