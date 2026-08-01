@@ -41,6 +41,15 @@ class CategoryCommandService:
 
             return uow.category_repo.save(category)
 
+    def delete_category(self, id: int) -> None:
+        with self._uow_factory() as uow:
+            category: Category | None = uow.category_repo.get(id)
+
+            if category is None:
+                raise CategoryNotFoundError(id=id)
+
+            uow.category_repo.delete(category)
+
 
 class CategoryQueryService:
     def __init__(self, query_repo: CategoryRepository) -> None:
