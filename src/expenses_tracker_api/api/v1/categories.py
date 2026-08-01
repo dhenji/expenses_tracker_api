@@ -78,3 +78,15 @@ def get_category_by_name(
     category: Category = service.get_category_by_name(name)
 
     return CategoryResponse.model_validate(category)
+
+
+@router.delete(
+    "/{category_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Delete category using id",
+)
+def delete_category(
+    category_id: int,
+    service: CategoryCommandService = Depends(get_category_command_service),
+) -> None:
+    service.delete_category(category_id)
