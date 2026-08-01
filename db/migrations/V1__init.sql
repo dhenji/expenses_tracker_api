@@ -18,7 +18,7 @@ CREATE TABLE public.categories (
 
 CREATE TABLE public.expenses (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid (),
-  user_id UUID REFERENCES public.users (id) ON UPDATE CASCADE ON DELETE CASCADE,
+  user_id UUID REFERENCES public.users (id) ON UPDATE CASCADE ON DELETE RESTRICT,
   category_id SERIAL REFERENCES public.categories (id) ON UPDATE CASCADE ON DELETE RESTRICT,
   amount DECIMAL NOT NULL DEFAULT 0,
   currency VARCHAR(3) NOT NULL,
