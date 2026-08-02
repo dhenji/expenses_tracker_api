@@ -80,6 +80,11 @@ All routes under `/api/v1`.
 | PATCH | `/users/{user_id}` | Update user |
 | DELETE | `/users/{user_id}` | Delete user |
 | POST | `/categories/` | Create category |
+| GET | `/categories/` | List categories |
+| GET | `/categories/{category_id}` | Get category by ID |
+| GET | `/categories/by-name/{name}` | Get category by name |
+| DELETE | `/categories/{category_id}` | Delete category |
+| POST | `/expenses/` | Create expense (route wired but not functional yet) |
 
 ## Project Structure
 
@@ -91,12 +96,14 @@ src/
 │   │   ├── router.py
 │   │   ├── deps.py
 │   │   └── v1/
-│   │       ├── users.py
-│   │       └── categories.py
+│   │   ├── users.py
+│   │   ├── categories.py
+│   │   └── expenses.py
 │   ├── core/                    # Config, database, security, UoW
 │   ├── shared/                  # Exceptions, repo utils
 │   ├── user/                    # User domain (model, DTO, schema, repo, service)
-│   └── category/                # Category domain
+│   ├── category/                # Category domain
+│   └── expense/                 # Expense domain (incomplete)
 ├── tests/                       # Test suite
 db/
 └── migrations/                  # Flyway SQL migrations
@@ -110,5 +117,6 @@ db/
 
 ## Status
 
-- **Implemented:** User CRUD, category creation, database schema + seed data
-- **Planned:** Expenses CRUD, category read/update/delete, authentication/authorization
+- **Implemented:** User CRUD, category create/list/get/delete, database schema + seed data
+- **In progress:** Expense create — route exists but is not fully wired (`POST /expenses/` does not work yet)
+- **Planned:** Expense read/update/delete, category update, authentication/authorization
