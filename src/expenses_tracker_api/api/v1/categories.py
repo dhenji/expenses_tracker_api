@@ -31,7 +31,7 @@ def create_category(
         CreateCategoryInput(
             name=category_data.name, description=category_data.description
         ),
-        user_id=None,
+        user_id=category_data.user_id,
     )
 
     return CategoryResponse.model_validate(category)
@@ -55,7 +55,7 @@ def list_categories(
     "/{category_id}",
     response_model=CategoryResponse,
     status_code=status.HTTP_200_OK,
-    summary="Get a category using name",
+    summary="Get a category using id",
 )
 def get_category(
     category_id: int,
