@@ -5,6 +5,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from expenses_tracker_api.category.repository import CategoryRepository
+from expenses_tracker_api.expense.repository import ExpenseRepository
 from expenses_tracker_api.shared.exceptions_mapper import map_write_error
 from expenses_tracker_api.user.repository import UserRepository
 
@@ -15,6 +16,7 @@ class UnitOfWork:
 
         self.user_repo = UserRepository(session)
         self.category_repo = CategoryRepository(session)
+        self.expense_repo = ExpenseRepository(session)
 
     def __enter__(self) -> Self:
         return self
