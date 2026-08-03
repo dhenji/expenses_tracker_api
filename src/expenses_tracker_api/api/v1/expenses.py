@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, status
 
+from expenses_tracker_api.api.deps import get_expense_command_service
 from expenses_tracker_api.expense.dto import CreateExpenseInput
 from expenses_tracker_api.expense.model import Expense
 from expenses_tracker_api.expense.schema import ExpenseCreate, ExpenseResponse
@@ -15,7 +16,8 @@ router = APIRouter()
     summary="Create a expense",
 )
 def create_expense(
-    expense_data: ExpenseCreate, service: ExpenseCommandService = Depends()
+    expense_data: ExpenseCreate,
+    service: ExpenseCommandService = Depends(get_expense_command_service),
 ) -> ExpenseResponse:
     expense: Expense = service.create_expense(
         CreateExpenseInput(
@@ -24,5 +26,8 @@ def create_expense(
             currency=expense_data.currency,
             description=expense_data.description,
             expense_date=expense_data.expense_date,
-        )
+        ),
+        user_id=expense_data.user_id,
     )
+
+    return ExpenseResponse.model_validate(expense)
