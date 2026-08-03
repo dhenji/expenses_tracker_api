@@ -25,7 +25,7 @@ class Expense(Base):
     )
     amount: Mapped[Decimal] = mapped_column(Numeric, server_default="0")
     currency: Mapped[str] = mapped_column(String(3))
-    description: Mapped[str] | None = mapped_column(String(255))
+    description: Mapped[str | None] = mapped_column(String(255))
     expense_date: Mapped[date] = mapped_column(Date, server_default="CURRENT_DATE")
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()

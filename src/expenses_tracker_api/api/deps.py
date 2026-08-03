@@ -10,6 +10,7 @@ from expenses_tracker_api.category.service import (
 )
 from expenses_tracker_api.core.database import database
 from expenses_tracker_api.core.unit_of_work import UnitOfWork
+from expenses_tracker_api.expense.service import ExpenseCommandService
 from expenses_tracker_api.user.repository import UserRepository
 from expenses_tracker_api.user.service import UserCommandService, UserQueryService
 
@@ -49,3 +50,7 @@ def get_category_query_service(
 ) -> CategoryQueryService:
     query_repository = CategoryRepository(session)
     return CategoryQueryService(query_repository)
+
+
+def get_expense_command_service() -> ExpenseCommandService:
+    return ExpenseCommandService(uow_factory=get_uow)

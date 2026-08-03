@@ -12,6 +12,7 @@ class ExpenseBase(BaseModel):
 
 
 class ExpenseCreate(ExpenseBase):
+    user_id: UUID
     category_id: int
     expense_date: date | None = None
 
