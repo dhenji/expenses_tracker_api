@@ -7,6 +7,7 @@ from expenses_tracker_api.category.exceptions import (
     CategoryNameAlreadyExistsError,
     CategoryNotFoundError,
 )
+from expenses_tracker_api.expense.exceptions import ExpenseNotFoundError
 from expenses_tracker_api.shared.exceptions import (
     ApplicationError,
     DatabaseError,
@@ -101,6 +102,12 @@ async def _category_not_found_error_handler(
     return JSONResponse(status_code=404, content={"detail": str(exc)})
 
 
+async def _expense_not_found_error_handler(
+    request: Request, exc: ExpenseNotFoundError
+) -> JSONResponse:
+    return JSONResponse(status_code=404, content={"detail": str(exc)})
+
+
 def register_exception_handlers(app: FastAPI) -> None:
     handlers: dict[type[ApplicationError], ExceptionHandler] = {
         DatabaseError: _database_error_handler,
@@ -111,6 +118,7 @@ def register_exception_handlers(app: FastAPI) -> None:
         UserNotFoundError: _user_not_found_error_handler,
         CategoryNameAlreadyExistsError: _category_name_already_exists_error_handler,
         CategoryNotFoundError: _category_not_found_error_handler,
+        ExpenseNotFoundError: _expense_not_found_error_handler,
     }
 
     for exception, handler in handlers.items():

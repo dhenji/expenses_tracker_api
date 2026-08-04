@@ -1,4 +1,5 @@
 from collections.abc import Sequence
+from uuid import UUID
 
 from fastapi import APIRouter, Depends, status
 from starlette.status import HTTP_200_OK
@@ -54,3 +55,16 @@ def get_all_expenses(
     expenses: Sequence = service.get_all_expenses()
 
     return [ExpenseResponse.model_validate(expense) for expense in expenses]
+
+
+@router.get(
+    "/{expense_id}",
+    response_model=ExpenseResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Get expense using id",
+)
+def get_expense(
+    expense_id: UUID,
+    service: ExpenseQueryService = Depends(get_expense_query_service),
+) -> ExpenseResponse:
+    return ExpenseResponse.model_validate(service.get_expense(expense_id))

@@ -6,6 +6,7 @@ from expenses_tracker_api.category.exceptions import CategoryNotFoundError
 from expenses_tracker_api.category.model import Category
 from expenses_tracker_api.core.unit_of_work import UnitOfWork
 from expenses_tracker_api.expense.dto import CreateExpenseInput
+from expenses_tracker_api.expense.exceptions import ExpenseNotFoundError
 from expenses_tracker_api.expense.model import Expense
 from expenses_tracker_api.expense.repository import ExpenseRepository
 from expenses_tracker_api.user.exceptions import UserNotFoundError
@@ -49,3 +50,11 @@ class ExpenseQueryService:
 
     def get_all_expenses(self) -> Sequence[Expense]:
         return self._query_repo.get_all()
+
+    def get_expense(self, id: UUID) -> Expense:
+        expense: Expense | None = self._query_repo.get(id)
+
+        if expense is None:
+            raise ExpenseNotFoundError(id=id)
+
+        return expense
