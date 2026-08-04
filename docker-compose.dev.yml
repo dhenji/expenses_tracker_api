@@ -45,7 +45,7 @@ services:
       - expenses-net
 
   postgres:
-    image: postgres:16
+    image: postgres:16-alpine
     container_name: pg-expenses-tracker
     restart: unless-stopped
     environment:
