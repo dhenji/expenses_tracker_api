@@ -40,6 +40,7 @@ class Settings(BaseSettings):
     db_pg_port: int
     db_pg_user: str
     db_pg_db_name: str
+    db_pg_user_password: str | None = None
 
     # Docker secrets default path
     secrets_path: Path = Path("/run/secrets")
@@ -51,14 +52,11 @@ class Settings(BaseSettings):
         return _Secrets(self.secrets_path)
 
     @property
-    def db_pg_user_password(self) -> str | None:
-        return self._secrets.read("pg_user_password")
-
-    @property
     def db_pg_url(self) -> str:
         required: dict[str, str | int | None] = {
             "user": self.db_pg_user,
-            "password": self.db_pg_user_password,
+            "password": self.db_pg_user_password
+            or self._secrets.read("pg_user_password"),
             "host": self.db_pg_host,
             "port": self.db_pg_port,
             "database_name": self.db_pg_db_name,

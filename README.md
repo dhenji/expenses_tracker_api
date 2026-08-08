@@ -17,7 +17,7 @@ FastAPI-based expense tracking API in development. Uses layered architecture wit
 
 ## Environment Setup
 
-Both `.env` and `secrets/` are gitignored — you need to create them manually after cloning.
+`.env` is gitignored — you need to create it manually after cloning.
 
 ### `.env`
 
@@ -32,23 +32,13 @@ DB_PG_HOST=localhost
 DB_PG_PORT=5432
 DB_PG_USER=exp_track_user
 DB_PG_DB_NAME=exp_track_db
-
-SECRETS_PATH=/run/secrets
+DB_PG_USER_PASSWORD=your_password_here
 ```
 
-- `SECRETS_PATH` points to the directory where the DB password file lives. Set it to `./secrets` when running locally outside Docker.
+- `DB_PG_USER_PASSWORD` is the DB password, set directly here for development.
 - When using Docker Compose, `DB_PG_HOST` must be `postgres` (the service name), not `localhost`.
 
-### `secrets/pg-user-password.txt`
-
-The DB password is stored separately as a Docker secret file. Create it with your own password:
-
-```bash
-mkdir -p secrets
-echo "your_password_here" > secrets/pg-user-password.txt
-```
-
-This file is mounted at `/run/secrets/pg_user_password` inside containers and read by the app at startup.
+> **Deployment:** for non-development environments, the password is injected by your own tooling (e.g. a cloud secrets manager / orchestrator secret) as the `DB_PG_USER_PASSWORD` env var. The app falls back to a Docker secret file mounted at `/run/secrets/pg_user_password` if the env var is unset.
 
 ## Quick Start
 
@@ -84,7 +74,10 @@ All routes under `/api/v1`.
 | GET | `/categories/{category_id}` | Get category by ID |
 | GET | `/categories/by-name/{name}` | Get category by name |
 | DELETE | `/categories/{category_id}` | Delete category |
-| POST | `/expenses/` | Create expense (route wired but not functional yet) |
+| POST | `/expenses/` | Create expense |
+| GET | `/expenses/` | List expenses |
+| GET | `/expenses/{expense_id}` | Get expense by ID |
+| DELETE | `/expenses/{expense_id}` | Delete expense |
 
 ## Project Structure
 
@@ -103,7 +96,7 @@ src/
 │   ├── shared/                  # Exceptions, repo utils
 │   ├── user/                    # User domain (model, DTO, schema, repo, service)
 │   ├── category/                # Category domain
-│   └── expense/                 # Expense domain (incomplete)
+│   └── expense/                 # Expense domain (create, list, get, delete)
 ├── tests/                       # Test suite
 db/
 └── migrations/                  # Flyway SQL migrations
@@ -112,11 +105,10 @@ db/
 ## Development Notes
 
 - **Migrations:** Add new files to `db/migrations/` as `V<number>__<description>.sql`. Run via Flyway in Docker.
-- **Secrets:** DB password is in `secrets/pg-user-password.txt`, mounted as a Docker secret at `/run/secrets/pg_user_password`. Not in `.env`. Tests mock the secret reader.
+- **Secrets:** DB password is set via the `DB_PG_USER_PASSWORD` env var from `.env` in development. For deployment, inject it with your own tooling; the app falls back to a Docker secret at `/run/secrets/pg_user_password`. Tests mock the secret reader.
 - **Tests:** `uv run pytest` or `docker compose -f docker-compose.dev.yml run test`.
 
 ## Status
 
-- **Implemented:** User CRUD, category create/list/get/delete, database schema + seed data
-- **In progress:** Expense create — route exists but is not fully wired (`POST /expenses/` does not work yet)
-- **Planned:** Expense read/update/delete, category update, authentication/authorization
+- **Implemented:** User CRUD; category create/list/get/delete; expense create/list/get/delete; database schema + seed data
+- **In progress:** Expense update, category update, authentication/authorization
