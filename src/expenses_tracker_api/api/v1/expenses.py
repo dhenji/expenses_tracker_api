@@ -68,3 +68,16 @@ def get_expense(
     service: ExpenseQueryService = Depends(get_expense_query_service),
 ) -> ExpenseResponse:
     return ExpenseResponse.model_validate(service.get_expense(expense_id))
+
+
+@router.delete(
+    "/{expense_id}",
+    response_model=None,
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Delete expense using id",
+)
+def delete_expense(
+    expense_id: UUID,
+    service: ExpenseCommandService = Depends(get_expense_command_service),
+) -> None:
+    service.delete_expense(expense_id)

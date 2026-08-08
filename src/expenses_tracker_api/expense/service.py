@@ -43,6 +43,15 @@ class ExpenseCommandService:
 
             return uow.expense_repo.save(expense)
 
+    def delete_expense(self, id: UUID) -> None:
+        with self._uow_factory() as uow:
+            expense: Expense | None = uow.expense_repo.get(id)
+
+            if expense is None:
+                raise ExpenseNotFoundError(id=id)
+
+            uow.expense_repo.delete(expense)
+
 
 class ExpenseQueryService:
     def __init__(self, query_repo: ExpenseRepository) -> None:
