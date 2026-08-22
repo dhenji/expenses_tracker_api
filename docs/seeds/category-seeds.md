@@ -226,6 +226,7 @@ Expenses that do not fit into other categories.
 
 # Implementation Notes
 
+- Implemented as Alembic data migration: `alembic/versions/ed4ac8f928f4_seed_default_expense_categories.py` (idempotent via `ON CONFLICT (name) DO NOTHING`).
 - Categories should be stored as configurable data instead of hardcoded values.
 - Users should be able to customize, add, disable, or rename categories.
 - Categories can optionally support subcategories for more detailed tracking (not included).

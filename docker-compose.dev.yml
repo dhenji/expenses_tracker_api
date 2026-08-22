@@ -60,22 +60,8 @@ services:
       start_period: 10s
     networks:
       - expenses-net
-
-  flyway:
-    image: flyway/flyway
-    environment:
-      FLYWAY_URL: jdbc:postgresql://postgres:${DB_PG_PORT}/${DB_PG_DB_NAME} 
-      FLYWAY_USER: ${DB_PG_USER}
-      FLYWAY_PASSWORD: ${DB_PG_USER_PASSWORD}
-      FLYWAY_LOCATIONS: filesystem:/flyway/migrations
-    command: ["migrate"]
-    volumes:
-      - ./db/migrations:/flyway/migrations:ro
-    depends_on:
-      postgres: 
-        condition: service_healthy
-    networks:
-      - expenses-net
+    ports:
+      - "${DB_PG_PORT}:5432"
 
 networks:
   expenses-net:
