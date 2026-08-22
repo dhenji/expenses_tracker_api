@@ -54,12 +54,15 @@ uvicorn expenses_tracker_api.main:app --reload
 ### Docker Compose (primary workflow)
 
 ```bash
+# Postgres + API — migrations apply automatically first (the `migrate` service
+# gates app/test with service_completed_successfully)
 docker compose -f docker-compose.dev.yml up -d postgres app
-DB_PG_HOST=localhost uv run alembic upgrade head
-docker compose -f docker-compose.dev.yml run test
+
+# Tests (waits for migrations too)
+docker compose -f docker-compose.dev.yml run --rm test
 ```
 
-Migrations run from the host against the published Postgres port, hence the `DB_PG_HOST=localhost` override (inside containers the host is `postgres`).
+Migrations run inside the `migrate` container (`uv run alembic upgrade head`) before `app`/`test` start. Run Alembic from the host only when creating revisions or stamping: `DB_PG_HOST=localhost uv run alembic revision -m "..."` (the port is published).
 
 ## API Endpoints
 
@@ -111,7 +114,7 @@ alembic/
 
 ## Development Notes
 
-- **Migrations:** Alembic. Create revisions with `uv run alembic revision -m "..."` into `alembic/versions/` and apply with `uv run alembic upgrade head`. Seed data lives in data migrations using raw SQL guarded by `ON CONFLICT DO NOTHING`. Never edit an applied revision — add a new one instead.
+- **Migrations:** Alembic. In Docker dev they are applied automatically by the `migrate` service before `app`/`test` start; host runs (`DB_PG_HOST=localhost uv run alembic ...`) are for authoring revisions or the one-time `stamp` below. Create revisions with `uv run alembic revision -m "..."` into `alembic/versions/` and apply with `uv run alembic upgrade head`. Seed data lives in data migrations using raw SQL guarded by `ON CONFLICT DO NOTHING`. Never edit an applied revision — add a new one instead.
 - **Pre-Alembic databases:** if your database was created back when migrations ran via Flyway, adopt it once with `uv run alembic stamp 9b04f42c35dd` before running `upgrade head`.
 - **Secrets:** DB password is set via the `DB_PG_USER_PASSWORD` env var from `.env` in development. For deployment, inject it with your own tooling; the app falls back to a Docker secret at `/run/secrets/pg_user_password`. Tests mock the secret reader.
 - **Tests:** `uv run pytest` or `docker compose -f docker-compose.dev.yml run test`.

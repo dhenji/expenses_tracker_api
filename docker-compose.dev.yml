@@ -22,6 +22,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
     networks:
       - expenses-net
   
@@ -37,6 +39,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
     networks:
       - expenses-net
 
@@ -62,6 +66,21 @@ services:
       - expenses-net
     ports:
       - "${DB_PG_PORT}:5432"
+
+  migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+      target: migrate
+    environment:
+      DB_PG_HOST: postgres
+    env_file:
+      - ./.env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - expenses-net
 
 networks:
   expenses-net:
