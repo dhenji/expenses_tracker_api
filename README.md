@@ -6,7 +6,7 @@ FastAPI-based expense tracking API in development. Uses layered architecture wit
 
 - **Runtime:** Python 3.13, FastAPI, Uvicorn
 - **ORM:** SQLAlchemy 2.0 + psycopg3 (PostgreSQL 16)
-- **Migrations:** Flyway (plain SQL)
+- **Migrations:** Alembic (SQLAlchemy migrations)
 - **Auth:** Argon2 password hashing via pwdlib
 - **Dev env:** Docker Compose (primary workflow), uv for package management
 
@@ -47,15 +47,19 @@ DB_PG_USER_PASSWORD=your_password_here
 ```bash
 uv sync --frozen
 uv run pytest
+uv run alembic upgrade head
 uvicorn expenses_tracker_api.main:app --reload
 ```
 
 ### Docker Compose (primary workflow)
 
 ```bash
-docker compose -f docker-compose.dev.yml up -d postgres flyway app
+docker compose -f docker-compose.dev.yml up -d postgres app
+DB_PG_HOST=localhost uv run alembic upgrade head
 docker compose -f docker-compose.dev.yml run test
 ```
+
+Migrations run from the host against the published Postgres port, hence the `DB_PG_HOST=localhost` override (inside containers the host is `postgres`).
 
 ## API Endpoints
 
@@ -98,13 +102,17 @@ src/
 │   ├── category/                # Category domain
 │   └── expense/                 # Expense domain (create, list, get, delete)
 ├── tests/                       # Test suite
-db/
-└── migrations/                  # Flyway SQL migrations
+alembic/
+├── env.py                       # Alembic env wired to app settings (DB URL from core/config.py)
+└── versions/
+    ├── 9b04f42c35dd_init_schema.py                    # tables: users, categories, expenses
+    └── ed4ac8f928f4_seed_default_expense_categories.py # idempotent category seed
 ```
 
 ## Development Notes
 
-- **Migrations:** Add new files to `db/migrations/` as `V<number>__<description>.sql`. Run via Flyway in Docker.
+- **Migrations:** Alembic. Create revisions with `uv run alembic revision -m "..."` into `alembic/versions/` and apply with `uv run alembic upgrade head`. Seed data lives in data migrations using raw SQL guarded by `ON CONFLICT DO NOTHING`. Never edit an applied revision — add a new one instead.
+- **Pre-Alembic databases:** if your database was created back when migrations ran via Flyway, adopt it once with `uv run alembic stamp 9b04f42c35dd` before running `upgrade head`.
 - **Secrets:** DB password is set via the `DB_PG_USER_PASSWORD` env var from `.env` in development. For deployment, inject it with your own tooling; the app falls back to a Docker secret at `/run/secrets/pg_user_password`. Tests mock the secret reader.
 - **Tests:** `uv run pytest` or `docker compose -f docker-compose.dev.yml run test`.
 
