@@ -4,17 +4,22 @@ WORKDIR /app
 
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 
-COPY pyproject.toml uv.lock README.md ./
+COPY pyproject.toml uv.lock README.md alembic.ini ./
 
 RUN uv sync --frozen --no-install-project
 
 COPY src ./src
+COPY alembic ./alembic
 
 RUN uv sync --frozen
 
 FROM builder AS test
 
 CMD [ "uv", "run", "pytest" ]
+
+FROM builder AS migrate
+
+CMD [ "uv", "run", "alembic", "upgrade", "head" ]
 
 FROM python:3.13-slim AS runtime
 
