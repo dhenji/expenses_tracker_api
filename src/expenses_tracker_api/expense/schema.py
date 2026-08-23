@@ -17,6 +17,14 @@ class ExpenseCreate(ExpenseBase):
     expense_date: date | None = None
 
 
+class ExpenseUpdate(BaseModel):
+    category_id: int | None = None
+    amount: Decimal | None = None
+    currency: str | None = None
+    description: str | None = None
+    expense_date: date | None = None
+
+
 class ExpenseResponse(ExpenseBase):
     id: UUID
     user_id: UUID
