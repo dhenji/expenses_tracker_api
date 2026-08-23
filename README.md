@@ -35,14 +35,28 @@ DB_PG_DB_NAME=exp_track_db
 DB_PG_USER_PASSWORD=your_password_here
 ```
 
-- `DB_PG_USER_PASSWORD` is the DB password, set directly here for development.
-- When using Docker Compose, `DB_PG_HOST` must be `postgres` (the service name), not `localhost`.
+**Key variables:**
+- `DB_PG_USER_PASSWORD` — DB password, set directly in `.env` for development
+- `DB_PG_HOST` — **Critical difference by workflow:**
+  - **Local development** (running `uvicorn`/`alembic` on host): `DB_PG_HOST=localhost` (PostgreSQL port is published to host)
+  - **Docker Compose** (primary workflow): `DB_PG_HOST=postgres` (the Docker service name)
+  - The template defaults to `localhost`; override via shell when using Compose (see Quick Start)
 
-> **Deployment:** for non-development environments, the password is injected by your own tooling (e.g. a cloud secrets manager / orchestrator secret) as the `DB_PG_USER_PASSWORD` env var. The app falls back to a Docker secret file mounted at `/run/secrets/pg_user_password` if the env var is unset.
+> **Deployment:** For non-development environments, inject the password via your own tooling (e.g. cloud secrets manager / orchestrator secret) as the `DB_PG_USER_PASSWORD` env var. The app falls back to a Docker secret file mounted at `/run/secrets/pg_user_password` if the env var is unset.
+
+### Secret Fallback & Import-Time Config
+
+- The app reads the password from `DB_PG_USER_PASSWORD` first; if unset, it reads the Docker secret at `/run/secrets/pg_user_password` (see `src/expenses_tracker_api/core/config.py:55-76`).
+- **Important:** `core/database.py` builds the SQLAlchemy engine at **import time** from settings. This means importing any app code (including for tests, Alembic, or REPL) requires both:
+  1. A valid `.env` file with all DB variables
+  2. The secret file to exist at `secrets_path` (default `/run/secrets/pg_user_password`) **or** `DB_PG_USER_PASSWORD` set in `.env`
+- The local file `secrets/pg-user-password.txt` (if present) is **only the app's fallback** for local import-time use — it is **not** used by docker-compose (which reads `.env` directly via `env_file`).
 
 ## Quick Start
 
 ### Local development
+
+> **Prereq:** Create `.env` with `DB_PG_HOST=localhost` and ensure a secret file exists at `secrets/pg-user-password.txt` (or set `DB_PG_USER_PASSWORD` in `.env`). See [Environment Setup](#environment-setup).
 
 ```bash
 uv sync --frozen
@@ -53,6 +67,8 @@ uvicorn expenses_tracker_api.main:app --reload
 
 ### Docker Compose (primary workflow)
 
+> **Prereq:** Create `.env` (any `DB_PG_HOST` value; Compose overrides to `postgres`). The `migrate` service runs automatically — see [Docker Compose Details](#docker-compose-details).
+
 ```bash
 # Postgres + API — migrations apply automatically first (the `migrate` service
 # gates app/test with service_completed_successfully)
@@ -62,7 +78,37 @@ docker compose -f docker-compose.dev.yml up -d postgres app
 docker compose -f docker-compose.dev.yml run --rm test
 ```
 
-Migrations run inside the `migrate` container (`uv run alembic upgrade head`) before `app`/`test` start. Run Alembic from the host only when creating revisions or stamping: `DB_PG_HOST=localhost uv run alembic revision -m "..."` (the port is published).
+### Host-level Alembic commands
+
+When authoring revisions or stamping from the host (outside Docker), use the published port:
+
+```bash
+DB_PG_HOST=localhost uv run alembic revision -m "add new table"
+DB_PG_HOST=localhost uv run alembic upgrade head
+```
+
+### Docker Compose Details
+
+- **`migrate` service**: Runs `uv run alembic upgrade head` on startup. The `app` and `test` services depend on it with `condition: service_completed_successfully`, so they wait for migrations to finish.
+- **Port publishing**: `postgres` publishes `${DB_PG_PORT}:5432` (default `5432:5432`). This allows host-level Alembic commands (`DB_PG_HOST=localhost uv run alembic ...`) to connect.
+- **Hot reload**: The `app` service mounts `./src:/app/src` and runs `uvicorn --reload --reload-dir /app/src/expenses_tracker_api`.
+- **Environment**: Both `app` and `test` services set `DB_PG_HOST=postgres` explicitly in their `environment:` block and load `.env` via `env_file`.
+
+### Testing Notes
+
+- Run tests locally: `uv run pytest`
+- Run tests in Docker: `docker compose -f docker-compose.dev.yml run --rm test`
+- The test suite mocks the secret reader by assigning to `settings.__dict__["_secrets"]` (bypassing the `cached_property`; see `src/tests/core/test_config.py`).
+- Both commands apply migrations first (via the `migrate` service dependency in Docker, or manually via `alembic upgrade head` locally).
+
+### Troubleshooting / FAQ
+
+| Issue | Resolution |
+|-------|------------|
+| `ValueError: Missing PostgreSQL configuration: ...` | Ensure `.env` exists with all `DB_PG_*` vars and either `DB_PG_USER_PASSWORD` is set **or** a secret file exists at `secrets_path/pg_user_password` (default `/run/secrets/pg_user_password`). |
+| Alembic: "Target database is not up to date" | Run `docker compose -f docker-compose.dev.yml up -d migrate` to apply pending migrations, or `DB_PG_HOST=localhost uv run alembic upgrade head` from host. |
+| Pre-Alembic database (created under Flyway) | One-time stamp: `DB_PG_HOST=localhost uv run alembic stamp 9b04f42c35dd` then `alembic upgrade head`. |
+| Constraint rename changes API error text | Exception handlers in `core/exception_handlers.py` hardcode constraint names (`categories_name_key`, `expenses_category_id_fkey`). Renaming a constraint in a migration silently changes the API error message — add a new migration to update the handler if needed. |
 
 ## API Endpoints
 
