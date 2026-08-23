@@ -13,6 +13,11 @@ class CategoryCreate(CategoryBase):
     user_id: UUID
 
 
+class CategoryUpdate(BaseModel):
+    name: str | None = None
+    description: str | None = None
+
+
 class CategoryResponse(CategoryBase):
     id: int
     user_id: UUID | None

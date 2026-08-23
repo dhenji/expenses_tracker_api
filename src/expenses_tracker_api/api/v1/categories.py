@@ -1,4 +1,5 @@
 from typing import Sequence
+from uuid import UUID
 
 from fastapi import APIRouter, Depends, status
 
@@ -6,9 +7,13 @@ from expenses_tracker_api.api.deps import (
     get_category_command_service,
     get_category_query_service,
 )
-from expenses_tracker_api.category.dto import CreateCategoryInput
+from expenses_tracker_api.category.dto import CreateCategoryInput, UpdateCategoryInput
 from expenses_tracker_api.category.model import Category
-from expenses_tracker_api.category.schema import CategoryCreate, CategoryResponse
+from expenses_tracker_api.category.schema import (
+    CategoryCreate,
+    CategoryResponse,
+    CategoryUpdate,
+)
 from expenses_tracker_api.category.service import (
     CategoryCommandService,
     CategoryQueryService,
@@ -76,6 +81,29 @@ def get_category_by_name(
     name: str, service: CategoryQueryService = Depends(get_category_query_service)
 ) -> CategoryResponse:
     category: Category = service.get_category_by_name(name)
+
+    return CategoryResponse.model_validate(category)
+
+
+@router.patch(
+    "/{user_id}/{category_id}",
+    response_model=CategoryResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Update a category using user_id and category_id",
+)
+def update_category(
+    user_id: UUID,
+    category_id: int,
+    category_data: CategoryUpdate,
+    service: CategoryCommandService = Depends(get_category_command_service),
+) -> CategoryResponse:
+    category: Category = service.update_category(
+        UpdateCategoryInput(
+            name=category_data.name, description=category_data.description
+        ),
+        user_id=user_id,
+        category_id=category_id,
+    )
 
     return CategoryResponse.model_validate(category)
 
