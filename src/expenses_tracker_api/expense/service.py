@@ -5,7 +5,7 @@ import expenses_tracker_api
 from expenses_tracker_api.category.exceptions import CategoryNotFoundError
 from expenses_tracker_api.category.model import Category
 from expenses_tracker_api.core.unit_of_work import UnitOfWork
-from expenses_tracker_api.expense.dto import CreateExpenseInput
+from expenses_tracker_api.expense.dto import CreateExpenseInput, UpdateExpenseInput
 from expenses_tracker_api.expense.exceptions import ExpenseNotFoundError
 from expenses_tracker_api.expense.model import Expense
 from expenses_tracker_api.expense.repository import ExpenseRepository
@@ -51,6 +51,33 @@ class ExpenseCommandService:
                 raise ExpenseNotFoundError(id=id)
 
             uow.expense_repo.delete(expense)
+
+    def update_expense(self, data: UpdateExpenseInput, *, id: UUID) -> Expense:
+        with self._uow_factory() as uow:
+            expense: Expense | None = uow.expense_repo.get(id)
+
+            if expense is None:
+                raise ExpenseNotFoundError(id=id)
+
+            category_id: int | None = data.category_id
+            if category_id is not None:
+                category: Category | None = uow.category_repo.get(category_id)
+
+                if category is None:
+                    raise CategoryNotFoundError(id=data.category_id)
+
+                expense.category_id = category_id
+
+            if data.amount is not None:
+                expense.amount = data.amount
+            if data.currency is not None:
+                expense.currency = data.currency
+            if data.description is not None:
+                expense.description = data.description
+            if data.expense_date is not None:
+                expense.expense_date = data.expense_date
+
+            return expense
 
 
 class ExpenseQueryService:

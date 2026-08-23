@@ -68,23 +68,23 @@ Migrations run inside the `migrate` container (`uv run alembic upgrade head`) be
 
 All routes under `/api/v1`.
 
-| Method | Path | Description |
-|--------|------|-------------|
-| POST | `/users/` | Create user |
-| GET | `/users/` | List users |
-| GET | `/users/{user_id}` | Get user by ID |
-| GET | `/users/by-email/{email}` | Get user by email |
-| PATCH | `/users/{user_id}` | Update user |
-| DELETE | `/users/{user_id}` | Delete user |
-| POST | `/categories/` | Create category |
-| GET | `/categories/` | List categories |
-| GET | `/categories/{category_id}` | Get category by ID |
-| GET | `/categories/by-name/{name}` | Get category by name |
-| DELETE | `/categories/{category_id}` | Delete category |
-| POST | `/expenses/` | Create expense |
-| GET | `/expenses/` | List expenses |
-| GET | `/expenses/{expense_id}` | Get expense by ID |
-| DELETE | `/expenses/{expense_id}` | Delete expense |
+| Method | Path                         | Description          |
+| ------ | ---------------------------- | -------------------- |
+| POST   | `/users/`                    | Create user          |
+| GET    | `/users/`                    | List users           |
+| GET    | `/users/{user_id}`           | Get user by ID       |
+| GET    | `/users/by-email/{email}`    | Get user by email    |
+| PATCH  | `/users/{user_id}`           | Update user          |
+| DELETE | `/users/{user_id}`           | Delete user          |
+| POST   | `/categories/`               | Create category      |
+| GET    | `/categories/`               | List categories      |
+| GET    | `/categories/{category_id}`  | Get category by ID   |
+| GET    | `/categories/by-name/{name}` | Get category by name |
+| DELETE | `/categories/{category_id}`  | Delete category      |
+| POST   | `/expenses/`                 | Create expense       |
+| GET    | `/expenses/`                 | List expenses        |
+| GET    | `/expenses/{expense_id}`     | Get expense by ID    |
+| DELETE | `/expenses/{expense_id}`     | Delete expense       |
 
 ## Project Structure
 
@@ -122,4 +122,4 @@ alembic/
 ## Status
 
 - **Implemented:** User CRUD; category create/list/get/delete; expense create/list/get/delete; database schema + seed data
-- **In progress:** Expense update, category update, authentication/authorization
+- **In progress:** Category update, authentication/authorization
