@@ -2,7 +2,7 @@ from collections.abc import Callable
 from typing import Sequence
 from uuid import UUID
 
-from expenses_tracker_api.category.dto import CreateCategoryInput
+from expenses_tracker_api.category.dto import CreateCategoryInput, UpdateCategoryInput
 from expenses_tracker_api.category.exceptions import (
     CategoryNameAlreadyExistsError,
     CategoryNotFoundError,
@@ -37,6 +37,32 @@ class CategoryCommandService:
             )
 
             return uow.category_repo.save(category)
+
+    def update_category(
+        self, data: UpdateCategoryInput, *, user_id: UUID, category_id: int
+    ) -> Category:
+        with self._uow_factory() as uow:
+            user: User | None = uow.user_repo.get(user_id)
+
+            if user is None:
+                raise UserNotFoundError(id=user_id)
+
+            category: Category | None = uow.category_repo.get(category_id)
+            if category is None or category.user_id != user_id:
+                raise CategoryNotFoundError(id=category_id)
+
+            if data.name is not None:
+                existing: Category | None = uow.category_repo.get_by_name(data.name)
+
+                if existing is not None:
+                    raise CategoryNameAlreadyExistsError(name=data.name)
+
+                category.name = data.name
+
+            if data.description is not None:
+                category.description = data.description
+
+            return category
 
     def delete_category(self, id: int) -> None:
         with self._uow_factory() as uow:
